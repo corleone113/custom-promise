@@ -260,7 +260,8 @@ class MyPromise {
             const resolveArray = [];
             let count = 0;
             for (const p of promises) {
-                MyPromise.resolve(p).then(value => {
+                const _p = isPromiseOrThenable(p) ? p : MyPromise.resolve(p); // 如果是Promise/Thenable那么就不转换了，避免不必要的延迟
+                _p.then(value => {
                     resolveArray.push(value);
                     if (++count === promises.length) resolve(resolveArray);
                 }, reject);
@@ -271,7 +272,8 @@ class MyPromise {
     static race(promises) {
         return new MyPromise((resolve, reject) => {
             for (const p of promises) {
-                MyPromise.resolve(p).then(resolve, reject);
+                const _p = isPromiseOrThenable(p) ? p : MyPromise.resolve(p); // 如果是Promise/Thenable那么就不转换了，避免不必要的延迟
+                _p.then(resolve, reject);
             }
         });
     }
@@ -281,7 +283,8 @@ class MyPromise {
             let count = 0;
             const results = [];
             for (const p of promises) {
-                MyPromise.resolve(p).then(
+                const _p = isPromiseOrThenable(p) ? p : MyPromise.resolve(p); // 如果是Promise/Thenable那么就不转换了，避免不必要的延迟
+                _p.then(
                     value => {
                         results.push({
                             status: 'fulfilled',
