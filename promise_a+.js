@@ -3,6 +3,19 @@ const isPromiseOrThenable = (value) => { // 判断是否为Promise或Thenable对
     if ((typeof value === 'object' && value !== null || typeof value === 'function') && typeof value.then === 'function') return true;
     return false;
 }
+
+const deffer = (cb=>{ // 根据平台定义延迟函数
+    if(typeof window !== 'undefined'){
+        const observer = new MutationObserver(cb);
+        const _span = document.createElement('span');
+        observer.observe(_span, {
+            childList: true,
+        });
+        _span.textContent = 1;
+    }else if(typeof global !== 'undefined'){
+        process.nextTick(cb);
+    }
+})
 const resolveExecutor = (promise, x, resolve, reject) => {
     // 判断thenable对象then方法是否已经执行——promise是否已经成功/失败。
     let isThenCalled = false
@@ -107,7 +120,7 @@ class MyPromise {
         const resolve = value => {
             if (resolved) return;
             resolved = true;
-            setTimeout(() => {
+            deffer(() => {
                 if (that.status === 'pending') { // pending状态才会继续
 
                     //value为Promise/Thenable时，通过resolveExecutor方法进行处理
@@ -132,7 +145,7 @@ class MyPromise {
         const reject = reason => {
             if (resolved) return;
             resolved = true;
-            setTimeout(() => {
+            deffer(() => {
                 if (that.status === 'pending') { // pending状态才会继续
 
                     //把状态改为失败态
@@ -174,9 +187,9 @@ class MyPromise {
             //2.2.7
             return (new_promise = new MyPromise((resolve, reject) => {
                 //2.2.4 在执行上下文堆栈仅包含平台代码之前，不能调用onFulfilled或onRejected。[3.1]。
-                //3.1 这里的“平台代码”是指引擎，环境和primise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如setTimeout或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
+                //3.1 这里的“平台代码”是指引擎，环境和primise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如deffer或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
                 //让onFulfilled异步执行
-                setTimeout(() => {
+                deffer(() => {
                     try {
                         if (typeof onFulfilled === 'function') { //onFulfilled为函数才取其返回值作为异步操作结果。
                             const x = onFulfilled(that.value);
@@ -192,9 +205,9 @@ class MyPromise {
         if (that.status === 'rejected') { // 若异步操作失败则直接传入onRejected回调，并将结果作为then返回promise的异步结果。
             return (new_promise = new MyPromise((resolve, reject) => {
                 //2.2.4 在执行上下文堆栈仅包含平台代码之前，不能调用onFulfilled或onRejected。[3.1]。
-                //3.1 这里的“平台代码”是指引擎，环境和primise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如setTimeout或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
+                //3.1 这里的“平台代码”是指引擎，环境和primise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如deffer或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
                 //让onFulfilled异步执行
-                setTimeout(() => {
+                deffer(() => {
                     try {
                         if (typeof onRejected === 'function') { //onRjected为函数才取其返回值作为异步失败原因。
                             const x = onRejected(that.reason);
@@ -304,4 +317,15 @@ class MyPromise {
         });
     }
 }
-module.exports = MyPromise
+(function (root, factory) {
+    if(typeof exports === 'object' && typeof module === 'object')
+      module.exports = factory();
+    else if(typeof define === 'function' && define.amd)
+      define([], factory);
+    else if(typeof exports === 'object')
+      exports['MyPromise'] = factory();
+    else
+      root['MyPromise'] = factory();
+  })(typeof self !== 'undefined' ? self : this, function() {
+    return MyPromise;
+  });

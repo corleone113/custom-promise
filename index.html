@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="promise_a+.js"></script>
+    <script>
+        setTimeout(() => console.log('Expect to be last!'))
+        const resolved = MyPromise.resolve(42);
+        const rejected = MyPromise.reject(-1);
+        const another = new MyPromise(() => {
+            throw 'corleone'
+        });
+        const allSettledPromise = MyPromise.allSettled([resolved, rejected, another]);
+
+        allSettledPromise.then((results) => {
+            console.log('results:', results);
+        });
+
+        MyPromise.all('corleone').then(v => console.log('>>>', v));
+    </script>
+</body>
+
+</html>

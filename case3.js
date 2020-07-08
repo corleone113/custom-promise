@@ -7,7 +7,7 @@ const Promise1 = require('./promise_a+');
 // // p.catch(()=>{});
 // // p.catch({});
 // p.then({}).then(v=>console.log('the v:', v));
-
+setTimeout(()=>console.log('Expect to be last!'))
 const resolved = Promise1.resolve(42);
 const rejected = Promise1.reject(-1);
 const another = new Promise1(()=>{throw 'corleone'});
