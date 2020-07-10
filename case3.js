@@ -1,13 +1,13 @@
-const Promise1 = require('./promise_a+');
+import Promise1 from './promise_a+.js';
 
-// const p = new Promise1((_, reject) => {
-//     // reject(44);
-//     _(44);
-// });
-// // p.catch(()=>{});
-// // p.catch({});
-// p.then({}).then(v=>console.log('the v:', v));
 setTimeout(()=>console.log('Expect to be last!'))
+const p = new Promise1((resolve, reject) => {
+    reject(44);
+    // resolve(44);
+});
+p.catch(()=>{});
+p.catch({});
+p.then({}).then(v=>console.log('the v:', v));
 const resolved = Promise1.resolve(42);
 const rejected = Promise1.reject(-1);
 const another = new Promise1(()=>{throw 'corleone'});

@@ -1,4 +1,5 @@
-const Promise1 = require('./promise_a+');
+import Promise1 from './promise_a+.js';
+
 const p1 = new Promise1(resolve=>{
     setTimeout(()=>{
         resolve(34);

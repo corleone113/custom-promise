@@ -1,4 +1,5 @@
-const Promise1 = require('./promise_a+');
+import Promise1 from './promise_a+.js';
+
 const p = new Promise1((resolve, reject) => {
     resolve(344);
 });

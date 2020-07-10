@@ -8,8 +8,8 @@
 </head>
 
 <body>
-    <script src="promise_a+.js"></script>
-    <script>
+    <script type="module">
+        import MyPromise from './promise_a+.js';
         setTimeout(() => console.log('Expect to be last!'))
         const resolved = MyPromise.resolve(42);
         const rejected = MyPromise.reject(-1);
