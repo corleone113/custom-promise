@@ -4,36 +4,35 @@ const isPromiseOrThenable = (value) => { // 判断是否为Promise或Thenable对
     return false;
 }
 
-const deffer = (cb=>{ // 根据平台定义延迟函数
-    if(typeof window !== 'undefined'){
+const deffer = (cb => { // 根据平台定义延迟函数
+    if (typeof window !== 'undefined') {
         const observer = new MutationObserver(cb);
         const _span = document.createElement('span');
         observer.observe(_span, {
             childList: true,
         });
         _span.textContent = 1;
-    }else if(typeof global !== 'undefined'){
+    } else if (typeof global !== 'undefined') {
         process.nextTick(cb);
     }
 })
 const resolveExecutor = (promise, x, resolve, reject) => {
-    // 判断thenable对象then方法是否已经执行——promise是否已经成功/失败。
+    // 判断thenable对象then方法是否已经执行,若已经执行则不能再调用resolve/reject修改Promise结果和状态。
     let isThenCalled = false
 
     // 2.3.1 如果promise和x引用同一个对象，则以TypeError为原因拒绝promise。
     if (promise === x) return reject(new TypeError('Circular reference!'))
-    // 2.3.2 如果x是一个promise,采用promise的状态
 
+    // 2.3.2 如果x是一个promise,采用promise的状态
     if (x instanceof MyPromise) {
         /**
          * 2.3.2.1 如果x是初始态，promise必须保持初始态(即递归执行这个解决程序)，直到x被成功或被失败。（即，直到resolve或者reject执行）
          */
         if (x.status === 'pending') {
-            x.then(function (y) {
+            x.then(y => {
                 resolveExecutor(promise, y, resolve, reject)
             }, reject)
         } else {
-
             // 2.3.2.2 如果/当x被成功时，用相同的值（结果）履行promise。
             // 2.3.2.3 如果/当x被失败时，用相同的错误原因履行promise。
             x.then(resolve, reject)
@@ -41,8 +40,9 @@ const resolveExecutor = (promise, x, resolve, reject) => {
     } else if (typeof x === 'object' && x !== null || typeof x === 'function') {
         // 2.3.3 否则，如果x是一个对象或函数,
         try {
-            // 2.3.3.1 让then等于x.then。
 
+
+            // 2.3.3.1 让then等于x.then。
             const {
                 then
             } = x;
@@ -125,7 +125,7 @@ class MyPromise {
 
                     //value为Promise/Thenable时，通过resolveExecutor方法进行处理
                     if (isPromiseOrThenable(value)) {
-                        resolved = false; // 可能出现循环引用，这里要将resolved置为false以便在reject中处理异常
+                        resolved = false; // 此时需要再次调用resolve/reject来完成异步操作，所以需要重置resolved。
                         return resolveExecutor(that, value, resolve, reject);
                     }
 
