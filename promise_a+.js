@@ -5,7 +5,10 @@ const isPromiseOrThenable = (value) => { // 判断是否为Promise或Thenable对
 }
 
 const deffer = (cb => { // 根据平台定义延迟函数
-    if (typeof window !== 'undefined') {
+    if(queueMicrotask){ // 如果支持queueMicrotask则使用它作为延迟函数
+        queueMicrotask(cb);
+    }
+    else if (typeof window !== 'undefined' && window.MutationObserver) {
         const observer = new MutationObserver(cb);
         const _span = document.createElement('span');
         observer.observe(_span, {
