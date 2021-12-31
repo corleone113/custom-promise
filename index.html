@@ -9,7 +9,7 @@
 
 <body>
     <script type="module">
-        import MyPromise from './promise_a+.js';
+        import MyPromise from './src/my-promise.js';
         setTimeout(() => console.log('Expect to be last!'))
         const resolved = MyPromise.resolve(42);
         const rejected = MyPromise.reject(-1);

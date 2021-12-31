@@ -1,6 +1,6 @@
-import Promise1 from './promise_a+.js';
+import Promise from './src/my-promise.js';
 
-const p = new Promise1((resolve, reject) => {
+const p = new Promise((resolve, reject) => {
     resolve(344);
 });
 p.then(value => {
@@ -16,11 +16,11 @@ p.then(value => {
 p.then(x => console.log('***', x));
 const p2 = p.then(() => {
     console.log('What...');
-    return new Promise1((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
-            resolve(new Promise1((resolve, reject) => {
+            resolve(new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    resolve(new Promise1((resolve, reject) => {
+                    resolve(new Promise((resolve, reject) => {
                         setTimeout(() => {
                             resolve(10000);
                         }, 2000)
