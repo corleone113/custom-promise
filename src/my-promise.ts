@@ -53,7 +53,7 @@ export default class MyPromise<T> {
                     this.status = PromiseStatus.Rejected
                     // 保存失败的原因
                     this.reason = reason
-                    if(!this.onRejectedCallbacks.length) { // 如果失败回调数组为空数组，说明存在未捕获的异常
+                    if (!this.onRejectedCallbacks.length) { // 如果失败回调数组为空数组，说明存在未捕获的异常
                         deffer(() => {
                             throw new Error(`UnhandledPromiseRejection error: ${this.reason}`)
                         })
@@ -97,7 +97,6 @@ export default class MyPromise<T> {
             }
         }
         const rejectCb = (resolve: ResolveFn<T, MyPromise<T>>, reject: RejectFn) => {
-            let unhandledErr: Error | null = null
             // 2.2.4 在执行上下文堆栈仅包含平台代码之前，不能调用onFulfilled或onRejected。[3.1]。
             // 3.1 这里的“平台代码”是指引擎，环境和promise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如deffer或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
             try {
