@@ -11,6 +11,6 @@ interface PromiseResult {
     reason?: any
 }
 
-type ResolveFn<T, T1 = Thenable<T>> = (value: T | Thenable<T> | T1) => void
+type ResolveFn<T, T1> = (value: T | Thenable<T> | T1) => void
 type RejectFn = (reason: any) => void
 type PromiseExecutor<T, T1 = Thenable<T>> = (resolve: ResolveFn<T, T1>, reject: RejectFn) => void

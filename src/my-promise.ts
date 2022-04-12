@@ -215,30 +215,28 @@ export default class MyPromise<T> {
 }
 
 /** 完成Promise任务的执行器 */
-function resolveExecutor<T>(oldP: MyPromise<T>, newP: T | MyPromise<T> | Thenable<T>, resolve: ResolveFn<T, MyPromise<T>>, reject: RejectFn) {
+function resolveExecutor<T>(newP: MyPromise<T>, ret: T | MyPromise<T> | Thenable<T>, resolve: ResolveFn<T, MyPromise<T>>, reject: RejectFn) {
     // 判断thenable对象then方法是否已经执行,若已经执行则不能再调用resolve/reject修改Promise结果和状态。
     let isThenCalled = false
     // 2.3.1 如果oldP和newP引用同一个对象，则以TypeError为原因拒绝promise。
-    if (oldP === (newP as unknown as MyPromise<T>)) {
-        const err = new TypeError('Circular reference!')
-        reject(err)
-        throw err
+    if (newP === (ret as unknown as MyPromise<T>)) {
+        return reject(new TypeError('Circular reference!'))
     }
     // 2.3.2 如果newP是一个promise,采用promise的状态
-    if (newP instanceof MyPromise) {
+    if (ret instanceof MyPromise) {
         // 2.3.2.1 如果newP是初始态，promise必须保持初始态(即递归执行这个解决程序)，直到newP被成功或被失败。（即，直到resolve或者reject执行）
-        if (newP['status'] === PromiseStatus.Pending) {
-            newP.then(p => {
-                resolveExecutor(oldP, p, resolve, reject)
+        if (ret['status'] === PromiseStatus.Pending) {
+            ret.then(p => {
+                resolveExecutor(newP, p, resolve, reject)
             }, reject)
         } else {
             // 2.3.2.2 如果/当newP被成功时，用相同的值（结果）履行promise。
             // 2.3.2.3 如果/当newP被失败时，用相同的错误原因履行promise。
-            newP.then(resolve, reject)
+            ret.then(resolve, reject)
         }
         // 2.3.3 否则，如果x是一个对象或函数,
-    } else if (isThenable(newP)) {
-        const changeThenCalled = () => {
+    } else if (isThenable(ret)) {
+        const shouldResolve = () => {
             //2.3.3.3.3 如果resolvePromise和rejectPromise都被调用，或者对同一个参数进行多次调用，则第一次调用优先，并且任何进一步的调用都会被忽略。
             if (isThenCalled) {
                 return false
@@ -247,20 +245,20 @@ function resolveExecutor<T>(oldP: MyPromise<T>, newP: T | MyPromise<T> | Thenabl
             }
         }
         const resolvePromise: FulfilledFn<T> = p => {
-            if (changeThenCalled()) {
+            if (shouldResolve()) {
                 //2.3.3.3.1 如果使用值（结果）调用resolvePromise，运行[[Resolve]]（promise）我的解决程序的名字是resolveExecutor,也就是递归调用。
-                resolveExecutor(oldP, p, resolve, reject)
+                resolveExecutor(newP, p, resolve, reject)
             }
         }
         const rejectPromise: RejectedFn<T> = r => {
-            if (changeThenCalled()) {
+            if (shouldResolve()) {
                 //2.3.3.3.2 如果使用拒绝原因r调用resolvePromise，运行reject(r)。
                 reject(r)
             }
         }
         try {
             // 2.3.3.3 如果then是一个函数，则直接调用它，第一个参数resolvePromise，第二个参数rejectPromise，其中
-            newP.then(resolvePromise, rejectPromise)
+            ret.then(resolvePromise, rejectPromise)
         } catch (e) {
             //2.3.3.2 如果newP.then导致抛出异常e，拒绝promise并用e作为失败原因
             //2.3.3.3.4.2 否则，以e作为失败原因拒绝promise
@@ -268,7 +266,7 @@ function resolveExecutor<T>(oldP: MyPromise<T>, newP: T | MyPromise<T> | Thenabl
         }
     } else {
         //2.3.3.4 如果then不是一个对象或者函数，则用newP作为值（结果）履行promise。
-        resolve(newP)
+        resolve(ret)
     }
 }
 

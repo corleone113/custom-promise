@@ -101,7 +101,6 @@ export default class MyPromise {
             }
         };
         const rejectCb = (resolve, reject) => {
-            let unhandledErr = null;
             // 2.2.4 在执行上下文堆栈仅包含平台代码之前，不能调用onFulfilled或onRejected。[3.1]。
             // 3.1 这里的“平台代码”是指引擎，环境和promise实现代码。在实践中，这个要求确保onFulfilled和onRejected异步执行，在事件循环开始之后then被调用，和一个新的堆栈。这可以使用诸如deffer或setImmediate之类的“宏任务”机制，或者使用诸如MutationObserver或process.nextTick的“微任务”机制来实现。由于promise实现被认为是经过深思熟虑的平台代码，因此它本身可能包含调用处理程序的任务调度队列或或称为“trampoline”（可重用的）的处理程序。
             try {
@@ -221,32 +220,30 @@ export default class MyPromise {
     }
 }
 /** 完成Promise任务的执行器 */
-function resolveExecutor(oldP, newP, resolve, reject) {
+function resolveExecutor(newP, ret, resolve, reject) {
     // 判断thenable对象then方法是否已经执行,若已经执行则不能再调用resolve/reject修改Promise结果和状态。
     let isThenCalled = false;
     // 2.3.1 如果oldP和newP引用同一个对象，则以TypeError为原因拒绝promise。
-    if (oldP === newP) {
-        const err = new TypeError('Circular reference!');
-        reject(err);
-        throw err;
+    if (newP === ret) {
+        return reject(new TypeError('Circular reference!'));
     }
     // 2.3.2 如果newP是一个promise,采用promise的状态
-    if (newP instanceof MyPromise) {
+    if (ret instanceof MyPromise) {
         // 2.3.2.1 如果newP是初始态，promise必须保持初始态(即递归执行这个解决程序)，直到newP被成功或被失败。（即，直到resolve或者reject执行）
-        if (newP['status'] === PromiseStatus.Pending) {
-            newP.then(p => {
-                resolveExecutor(oldP, p, resolve, reject);
+        if (ret['status'] === PromiseStatus.Pending) {
+            ret.then(p => {
+                resolveExecutor(newP, p, resolve, reject);
             }, reject);
         }
         else {
             // 2.3.2.2 如果/当newP被成功时，用相同的值（结果）履行promise。
             // 2.3.2.3 如果/当newP被失败时，用相同的错误原因履行promise。
-            newP.then(resolve, reject);
+            ret.then(resolve, reject);
         }
         // 2.3.3 否则，如果x是一个对象或函数,
     }
-    else if (isThenable(newP)) {
-        const changeThenCalled = () => {
+    else if (isThenable(ret)) {
+        const shouldResolve = () => {
             //2.3.3.3.3 如果resolvePromise和rejectPromise都被调用，或者对同一个参数进行多次调用，则第一次调用优先，并且任何进一步的调用都会被忽略。
             if (isThenCalled) {
                 return false;
@@ -256,20 +253,20 @@ function resolveExecutor(oldP, newP, resolve, reject) {
             }
         };
         const resolvePromise = p => {
-            if (changeThenCalled()) {
+            if (shouldResolve()) {
                 //2.3.3.3.1 如果使用值（结果）调用resolvePromise，运行[[Resolve]]（promise）我的解决程序的名字是resolveExecutor,也就是递归调用。
-                resolveExecutor(oldP, p, resolve, reject);
+                resolveExecutor(newP, p, resolve, reject);
             }
         };
         const rejectPromise = r => {
-            if (changeThenCalled()) {
+            if (shouldResolve()) {
                 //2.3.3.3.2 如果使用拒绝原因r调用resolvePromise，运行reject(r)。
                 reject(r);
             }
         };
         try {
             // 2.3.3.3 如果then是一个函数，则直接调用它，第一个参数resolvePromise，第二个参数rejectPromise，其中
-            newP.then(resolvePromise, rejectPromise);
+            ret.then(resolvePromise, rejectPromise);
         }
         catch (e) {
             //2.3.3.2 如果newP.then导致抛出异常e，拒绝promise并用e作为失败原因
@@ -279,7 +276,7 @@ function resolveExecutor(oldP, newP, resolve, reject) {
     }
     else {
         //2.3.3.4 如果then不是一个对象或者函数，则用newP作为值（结果）履行promise。
-        resolve(newP);
+        resolve(ret);
     }
 }
 /** 微任务延时函数 */
