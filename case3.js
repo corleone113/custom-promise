@@ -1,20 +1,21 @@
-import Promise1 from './promise_a+.js';
+import Promise from './src/my-promise.js';
 
 setTimeout(()=>console.log('Expect to be last!'))
-const p = new Promise1((resolve, reject) => {
-    reject(44);
+const p = new Promise((resolve, reject) => {
+    // setTimeout(()=>reject(44), 3000)
+    reject(44)
     // resolve(44);
 });
-p.catch(()=>{});
+p.catch((e)=>{console.log('>>> err:', e)});
 p.catch({});
 p.then({}).then(v=>console.log('the v:', v));
-const resolved = Promise1.resolve(42);
-const rejected = Promise1.reject(-1);
-const another = new Promise1(()=>{throw 'corleone'});
-const allSettledPromise = Promise1.allSettled([resolved, rejected, another]);
+const resolved = Promise.resolve(42);
+const rejected = Promise.reject(-1);
+const another = new Promise(()=>{throw 'corleone'});
+const allSettledPromise = Promise.allSettled([resolved, rejected, another]);
 
 allSettledPromise.then((results) => {
   console.log('results:', results);
 });
 
-Promise1.all('corleone').then(v=>console.log('>>>', v));
+Promise.all('corleone').then(v=>console.log('>>>', v));

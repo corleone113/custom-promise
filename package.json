@@ -17,5 +17,8 @@
     "url": "https://github.com/corleone113/custom-promise/issues"
   },
   "homepage": "https://github.com/corleone113/custom-promise#readme",
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^16.11.10"
+  }
 }
