@@ -225,15 +225,9 @@ function resolveExecutor<T>(newP: MyPromise<T>, ret: T | MyPromise<T> | Thenable
     // 2.3.2 如果newP是一个promise,采用promise的状态
     if (ret instanceof MyPromise) {
         // 2.3.2.1 如果newP是初始态，promise必须保持初始态(即递归执行这个解决程序)，直到newP被成功或被失败。（即，直到resolve或者reject执行）
-        if (ret['status'] === PromiseStatus.Pending) {
-            ret.then(p => {
-                resolveExecutor(newP, p, resolve, reject)
-            }, reject)
-        } else {
-            // 2.3.2.2 如果/当newP被成功时，用相同的值（结果）履行promise。
-            // 2.3.2.3 如果/当newP被失败时，用相同的错误原因履行promise。
-            ret.then(resolve, reject)
-        }
+        // 2.3.2.2 如果/当newP被成功时，用相同的值（结果）履行promise。
+        // 2.3.2.3 如果/当newP被失败时，用相同的错误原因履行promise。
+        ret.then(resolve, reject)
         // 2.3.3 否则，如果x是一个对象或函数,
     } else if (isThenable(ret)) {
         const shouldResolve = () => {
